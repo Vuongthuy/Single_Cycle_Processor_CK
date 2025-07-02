@@ -7,9 +7,9 @@ module ALU (
 );
     always @(*) begin
         case (ALUOp)
-            4'b0000: Result = A + B;
-            4'b0001: Result = A - B;
-            4'b0010: Result = A & B;
+            4'b0000: Result = A * B;              
+            4'b0001: Result = (B != 0) ? A / B : 32'b0; 
+            4'b0010: Result = A | B;            
             4'b0011: Result = A | B;
             4'b0100: Result = A ^ B;
             4'b0101: Result = A << B[4:0];
