@@ -6,7 +6,6 @@ module IMEM (
     reg [31:0] memory [0:255];
     wire [31:0] instr_tmp;
 
-    // Nếu địa chỉ >= 128 thì trả về lệnh halt, ngược lại trả về lệnh thật
     assign instr_tmp = (addr[11:2] >= 128) ? 32'h00000063 : memory[addr[11:2]];
     assign Instruction = instr_tmp;
 

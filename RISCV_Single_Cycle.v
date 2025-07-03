@@ -28,7 +28,7 @@ module RISCV_Single_Cycle(
     end
 
     // --- Khởi tạo module bộ nhớ lệnh ---
-    IMEM imem_inst(
+    IMEM IMEM_inst( // BẮT BUỘC ĐÚNG TÊN INSTANCE NÀY!
         .addr(PC_out_top),
         .Instruction(Instruction_out_top)
     );
@@ -73,7 +73,7 @@ module RISCV_Single_Cycle(
     );
 
     // --- Data Memory ---
-    DMEM dmem_inst(
+    DMEM DMEM_inst( // BẮT BUỘC ĐÚNG TÊN INSTANCE NÀY!
         .clk(clk),
         .rst_n(rst_n),
         .MemRead(mem_read_flag),

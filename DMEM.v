@@ -8,12 +8,10 @@ module DMEM (
     output logic [31:0] ReadData
 );
 
-    logic [31:0] memory [0:255];
+    reg [31:0] memory [0:255]; // PHẢI là reg!
 
-    // Đọc dữ liệu từ bộ nhớ
     assign ReadData = (MemRead == 1'b1) ? memory[addr[9:2]] : 32'b0;
 
-    // Ghi bộ nhớ hoặc reset
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             for (int idx = 0; idx < 256; idx = idx + 1)
@@ -23,7 +21,6 @@ module DMEM (
         end
     end
 
-    // Nạp dữ liệu initial
     initial begin
         if ($fopen("./mem/dmem_init.hex", "r"))
             $readmemh("./mem/dmem_init.hex", memory);
