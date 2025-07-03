@@ -8,7 +8,7 @@ module DMEM (
     output logic [31:0] ReadData
 );
 
-    logic [31:0] data_mem [0:255];
+    logic [31:0] memory [0:255];
     logic [31:0] read_data_tmp;
 
     // Gán giá trị đọc bộ nhớ
