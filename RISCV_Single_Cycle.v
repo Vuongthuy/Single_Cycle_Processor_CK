@@ -73,7 +73,7 @@ module RISCV_Single_Cycle(
     );
 
     // --- Data Memory ---
-    DMEM DMEM_inst( // BẮT BUỘC ĐÚNG TÊN INSTANCE NÀY!
+    DMEM DMEM_inst( 
         .clk(clk),
         .rst_n(rst_n),
         .MemRead(mem_read_flag),

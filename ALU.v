@@ -11,7 +11,7 @@ module ALU (
 
     always @(*) begin
         temp_result = 32'b0; // Mặc định kết quả là 0
-        unique case (ALUOp)
+        case (ALUOp)
             4'd0:    temp_result = A + B;                       // ADD
             4'd1:    temp_result = A - B;                       // SUB
             4'd2:    temp_result = A & B;                       // AND

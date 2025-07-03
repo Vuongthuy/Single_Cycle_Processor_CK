@@ -29,11 +29,11 @@ module control_unit (
         mem_to_reg_tmp  = 1'b0;
         reg_write_tmp   = 1'b0;
 
-        unique case (opcode)
+        case (opcode)
             7'b0110011: begin // R-type
                 alu_src_tmp = 2'b00;
                 reg_write_tmp = 1'b1;
-                unique case ({funct7, funct3})
+                case ({funct7, funct3})
                     10'b0000000000: alu_op_tmp = 4'b0000; // add
                     10'b0100000000: alu_op_tmp = 4'b0001; // sub
                     10'b0000000111: alu_op_tmp = 4'b0010; // and
@@ -50,7 +50,7 @@ module control_unit (
             7'b0010011: begin // I-type
                 alu_src_tmp = 2'b01;
                 reg_write_tmp = 1'b1;
-                unique case (funct3)
+                case (funct3)
                     3'b000: alu_op_tmp = 4'b0000; // addi
                     3'b111: alu_op_tmp = 4'b0010; // andi
                     3'b110: alu_op_tmp = 4'b0011; // ori

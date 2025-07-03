@@ -11,7 +11,7 @@ module Branch_Comp (
     always_comb begin
         br_flag = 1'b0; // Mặc định không nhảy
         if (Branch) begin
-            unique case (funct3)
+            case (funct3)
                 3'b000: br_flag = ~(A ^ B);                              // beq (A==B): ~(A^B) là true nếu bằng nhau
                 3'b001: br_flag = |(A ^ B);                              // bne (A!=B): A^B khác 0 nếu khác nhau
                 3'b100: br_flag = ($signed(A) < $signed(B));             // blt
