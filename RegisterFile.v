@@ -10,22 +10,17 @@ module RegisterFile (
     input logic rst_n
 );
 
-    logic [31:0] reg_array [0:31];
-    logic [31:0] read1_tmp, read2_tmp;
+    reg [31:0] registers [0:31];
 
-    // Đọc dữ liệu từ các thanh ghi, x0 luôn bằng 0
-    assign read1_tmp = (rs1 == 0) ? 32'b0 : reg_array[rs1];
-    assign read2_tmp = (rs2 == 0) ? 32'b0 : reg_array[rs2];
-    assign ReadData1 = read1_tmp;
-    assign ReadData2 = read2_tmp;
+    assign ReadData1 = (rs1 != 0) ? registers[rs1] : 32'b0;
+    assign ReadData2 = (rs2 != 0) ? registers[rs2] : 32'b0;
 
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            for (int idx = 0; idx < 32; idx = idx + 1)
-                reg_array[idx] <= 32'b0;
-        end else if (RegWrite && (rd != 0)) begin
-            reg_array[rd] <= WriteData;
+            for (int i = 0; i < 32; i = i + 1)
+                registers[i] <= 32'b0;
+        end else if (RegWrite && rd != 0) begin
+            registers[rd] <= WriteData;
         end
     end
-
 endmodule
