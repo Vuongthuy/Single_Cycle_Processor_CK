@@ -5,124 +5,111 @@ module RISCV_Single_Cycle(
     output logic [31:0] Instruction_out_top
 );
 
-    // Program Counter
-    logic [31:0] PC_next;
-
-    // Wires for instruction fields
-    logic [4:0] rs1, rs2, rd;
-    logic [2:0] funct3;
-    logic [6:0] opcode, funct7;
-
-    // Immediate value
+    // --- Khai báo các biến tạm ---
+    logic [31:0] pc_next_tmp;
     logic [31:0] Imm;
+    logic [4:0] rs1_tmp, rs2_tmp, rd_tmp;
+    logic [2:0] funct3_tmp;
+    logic [6:0] opcode_tmp, funct7_tmp;
+    logic [31:0] reg_data1, reg_data2, wb_data;
+    logic [31:0] alu_in2_tmp, alu_result_tmp;
+    logic alu_zero_flag;
+    logic [31:0] mem_read_data_tmp;
+    logic [1:0] alu_src_tmp;
+    logic [3:0] alu_ctrl_tmp;
+    logic branch_flag, mem_read_flag, mem_write_flag, mem2reg_flag, reg_write_flag, pc_sel_flag;
 
-    // Register file wires
-    logic [31:0] ReadData1, ReadData2, WriteData;
-
-    // ALU
-    logic [31:0] ALU_in2, ALU_result;
-    logic ALUZero;
-
-    // Data Memory
-    logic [31:0] MemReadData;
-
-    // Control signals
-    logic [1:0] ALUSrc;
-    logic [3:0] ALUCtrl;
-    logic Branch, MemRead, MemWrite, MemToReg;
-    logic RegWrite, PCSel;
-
-    // PC update
+    // --- Cập nhật PC ---
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n)
             PC_out_top <= 32'b0;
         else
-            PC_out_top <= PC_next;
+            PC_out_top <= pc_next_tmp;
     end
 
-    // Instruction Memory (IMEM)
-    IMEM IMEM_inst(
+    // --- Khởi tạo module bộ nhớ lệnh ---
+    IMEM imem_inst(
         .addr(PC_out_top),
         .Instruction(Instruction_out_top)
     );
 
-    // Instruction field decoding
-    assign opcode = Instruction_out_top[6:0];
-    assign rd     = Instruction_out_top[11:7];
-    assign funct3 = Instruction_out_top[14:12];
-    assign rs1    = Instruction_out_top[19:15];
-    assign rs2    = Instruction_out_top[24:20];
-    assign funct7 = Instruction_out_top[31:25];
+    // --- Phân tách trường lệnh ---
+    assign opcode_tmp = Instruction_out_top[6:0];
+    assign rd_tmp     = Instruction_out_top[11:7];
+    assign funct3_tmp = Instruction_out_top[14:12];
+    assign rs1_tmp    = Instruction_out_top[19:15];
+    assign rs2_tmp    = Instruction_out_top[24:20];
+    assign funct7_tmp = Instruction_out_top[31:25];
 
-    // Immediate generator
-    Imm_Gen imm_gen(
+    // --- Sinh hằng số ---
+    Imm_Gen imm_gen_inst(
         .inst(Instruction_out_top),
         .imm_out(Imm)
     );
 
-    // Register File (instance name must be Reg_inst for tb)
+    // --- Register File (instance phải là Reg_inst cho tb) ---
     RegisterFile Reg_inst(
         .clk(clk),
         .rst_n(rst_n),
-        .RegWrite(RegWrite),
-        .rs1(rs1),
-        .rs2(rs2),
-        .rd(rd),
-        .WriteData(WriteData),
-        .ReadData1(ReadData1),
-        .ReadData2(ReadData2)
+        .RegWrite(reg_write_flag),
+        .rs1(rs1_tmp),
+        .rs2(rs2_tmp),
+        .rd(rd_tmp),
+        .WriteData(wb_data),
+        .ReadData1(reg_data1),
+        .ReadData2(reg_data2)
     );
 
-    // ALU input selection
-    assign ALU_in2 = (ALUSrc[0]) ? Imm : ReadData2;
+    // --- Lựa chọn input 2 cho ALU ---
+    assign alu_in2_tmp = (alu_src_tmp[0]) ? Imm : reg_data2;
 
-    // ALU
-    ALU alu(
-        .A(ReadData1),
-        .B(ALU_in2),
-        .ALUOp(ALUCtrl),
-        .Result(ALU_result),
-        .Zero(ALUZero)
+    // --- ALU ---
+    ALU alu_inst(
+        .A(reg_data1),
+        .B(alu_in2_tmp),
+        .ALUOp(alu_ctrl_tmp),
+        .Result(alu_result_tmp),
+        .Zero(alu_zero_flag)
     );
 
-    // Data Memory (DMEM)
-    DMEM DMEM_inst(
+    // --- Data Memory ---
+    DMEM dmem_inst(
         .clk(clk),
         .rst_n(rst_n),
-        .MemRead(MemRead),
-        .MemWrite(MemWrite),
-        .addr(ALU_result),
-        .WriteData(ReadData2),
-        .ReadData(MemReadData)
+        .MemRead(mem_read_flag),
+        .MemWrite(mem_write_flag),
+        .addr(alu_result_tmp),
+        .WriteData(reg_data2),
+        .ReadData(mem_read_data_tmp)
     );
 
-    // Write-back mux
-    assign WriteData = (MemToReg) ? MemReadData : ALU_result;
+    // --- Write-back multiplexer ---
+    assign wb_data = (mem2reg_flag) ? mem_read_data_tmp : alu_result_tmp;
 
-    // Control unit
-    control_unit ctrl(
-        .opcode(opcode),
-        .funct3(funct3),
-        .funct7(funct7),
-        .ALUSrc(ALUSrc),
-        .ALUOp(ALUCtrl),
-        .Branch(Branch),
-        .MemRead(MemRead),
-        .MemWrite(MemWrite),
-        .MemToReg(MemToReg),
-        .RegWrite(RegWrite)
+    // --- Control unit ---
+    control_unit ctrl_unit_inst(
+        .opcode(opcode_tmp),
+        .funct3(funct3_tmp),
+        .funct7(funct7_tmp),
+        .ALUSrc(alu_src_tmp),
+        .ALUOp(alu_ctrl_tmp),
+        .Branch(branch_flag),
+        .MemRead(mem_read_flag),
+        .MemWrite(mem_write_flag),
+        .MemToReg(mem2reg_flag),
+        .RegWrite(reg_write_flag)
     );
 
-    // Branch comparator
-    Branch_Comp comp(
-        .A(ReadData1),
-        .B(ReadData2),
-        .Branch(Branch),
-        .funct3(funct3),
-        .BrTaken(PCSel)
+    // --- Bộ so sánh điều kiện nhảy ---
+    Branch_Comp branch_comp_inst(
+        .A(reg_data1),
+        .B(reg_data2),
+        .Branch(branch_flag),
+        .funct3(funct3_tmp),
+        .BrTaken(pc_sel_flag)
     );
 
-    // Next PC logic
-    assign PC_next = (PCSel) ? PC_out_top + Imm : PC_out_top + 4;
+    // --- Logic cập nhật PC ---
+    assign pc_next_tmp = (pc_sel_flag) ? PC_out_top + Imm : PC_out_top + 4;
 
 endmodule

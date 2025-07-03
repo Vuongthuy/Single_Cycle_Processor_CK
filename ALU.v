@@ -5,20 +5,29 @@ module ALU (
     output logic [31:0] Result,
     output logic Zero
 );
+
+    logic [31:0] temp_result;
+    logic zero_flag;
+
     always @(*) begin
-        case (ALUOp)
-            4'b0000: Result = A * B;              
-            4'b0001: Result = (B != 0) ? A / B : 32'b0; 
-            4'b0010: Result = A | B;            
-            4'b0011: Result = A | B;
-            4'b0100: Result = A ^ B;
-            4'b0101: Result = A << B[4:0];
-            4'b0110: Result = A >> B[4:0];
-            4'b0111: Result = $signed(A) >>> B[4:0];
-            4'b1000: Result = ($signed(A) < $signed(B)) ? 1 : 0;
-            4'b1001: Result = (A < B) ? 1 : 0;
-            default: Result = 32'b0;
+        temp_result = 32'b0; // Mặc định kết quả là 0
+        unique case (ALUOp)
+            4'd0:    temp_result = A + B;                       // ADD
+            4'd1:    temp_result = A - B;                       // SUB
+            4'd2:    temp_result = A & B;                       // AND
+            4'd3:    temp_result = A | B;                       // OR
+            4'd4:    temp_result = A ^ B;                       // XOR
+            4'd5:    temp_result = A << B[4:0];                 // SLL
+            4'd6:    temp_result = A >> B[4:0];                 // SRL
+            4'd7:    temp_result = $signed(A) >>> B[4:0];       // SRA
+            4'd8:    temp_result = ($signed(A) < $signed(B)) ? 32'd1 : 32'd0; // SLT
+            4'd9:    temp_result = (A < B) ? 32'd1 : 32'd0;      // SLTU
+            default: temp_result = 32'b0;
         endcase
     end
-    assign Zero = (Result == 32'b0);
+
+    // Cập nhật output Result & Zero
+    assign Result = temp_result;
+    assign Zero = (temp_result == 32'b0) ? 1'b1 : 1'b0;
+
 endmodule

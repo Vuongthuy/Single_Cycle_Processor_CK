@@ -7,23 +7,29 @@ module DMEM (
     input logic [31:0] WriteData,
     output logic [31:0] ReadData
 );
-    logic [31:0] memory [0:255];
 
-    assign ReadData = (MemRead) ? memory[addr[9:2]] : 32'b0;
+    logic [31:0] data_mem [0:255];
+    logic [31:0] read_data_tmp;
 
+    // Gán giá trị đọc bộ nhớ
+    assign ReadData = (MemRead == 1'b1) ? data_mem[addr[9:2]] : 32'b0;
+
+    // Khối always để reset và ghi bộ nhớ
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            for (int i = 0; i < 256; i = i + 1)
-                memory[i] <= 32'b0;
+            for (int idx = 0; idx < 256; idx = idx + 1)
+                data_mem[idx] <= 32'b0;
         end else if (MemWrite) begin
-            memory[addr[9:2]] <= WriteData;
+            data_mem[addr[9:2]] <= WriteData;
         end
     end
 
+    // Khối initial nạp dữ liệu bộ nhớ
     initial begin
-        if ($fopen("./mem/dmem_init2.hex", "r"))
-            $readmemh("./mem/dmem_init2.hex", memory);
-        else if ($fopen("./mem/dmem_init.hex", "r"))
-            $readmemh("./mem/dmem_init.hex", memory);
+        if ($fopen("./mem/dmem_init.hex", "r"))
+            $readmemh("./mem/dmem_init.hex", data_mem);
+        else if ($fopen("./mem/dmem_init2.hex", "r"))
+            $readmemh("./mem/dmem_init2.hex", data_mem);
     end
+
 endmodule
